@@ -12,42 +12,46 @@ import Data.Text (Text)
 import Data.Time.Clock.POSIX
 import Network.URI (isURI)
 
-import CommonTypes (Application, Application(..), PageURL)
+import CommonTypes (Application, Application(..), PageTitle, PageURL, PageTitle, Page (..))
 
-import HtmlExtractor (PageInfo, attributeValueByName, elementName, elementsInfo, extractHtml)
+import HtmlExtractor (PageInfo, attributeValueByName, elementName, elementsInfo, extractHtml, pageTitle)
 import URLFetcher (extractRelativeURLs, fetchRequest, relativeToAbsoluteURLS)
 
-mergeDiscoveredURLs :: M.Map Text Bool -> [Text] -> M.Map Text Bool
-mergeDiscoveredURLs discoveredURLs urls = M.unionWith (||) discoveredURLs urlsToMap
+mergeDiscoveredURLs :: M.Map Text Page -> [Text] -> M.Map Text Page
+mergeDiscoveredURLs discoveredURLs urls = M.unionWith (\left _-> left) discoveredURLs urlsToMap
   where
-    urlsToMap = M.fromList (zip urls (repeat False))
+    urlsToMap = M.fromList (zip urls (repeat EmptyPage))
 
-discovery :: Int -> M.Map PageURL Bool -> [PageURL] -> IO [PageURL]
-discovery _ discoveredURLsDB [] = return $ M.keys discoveredURLsDB
+discovery :: Int -> M.Map PageURL Page -> [PageURL]  -> IO [Page]
+discovery _ discoveredURLsDB [] = return $ M.elems discoveredURLsDB
 discovery maxRecords discoveredURLsDB (url:urls) =
     if M.size discoveredURLsDB > maxRecords
-        then return $ M.keys discoveredURLsDB
+        then return $ M.elems discoveredURLsDB
         else if isURI $ T.unpack url
                  then do
                      let urlDiscovered = M.lookup url discoveredURLsDB
-                     if isJust urlDiscovered && fromJust urlDiscovered
+                     if isJust urlDiscovered
                          then discovery maxRecords discoveredURLsDB urls
                          else do
                              eitherBodyOrError <- fetchRequest url
-                             let discoveredURLsDB' = M.insert url True discoveredURLsDB
                              if isRight eitherBodyOrError
                                  then do
-                                     let urls' =
-                                             ((combineURLs urls . relativeToAbsoluteURLS url . extractRelativeURLs . extractURLs . extractHtml url)
-                                                  (fromRight (LC.pack "") eitherBodyOrError))
-                                     let mergedURLsDB = mergeDiscoveredURLs discoveredURLsDB' urls'
-                                     discovery maxRecords mergedURLsDB urls'
-                                 else discovery maxRecords discoveredURLsDB' urls
+                                     let html = fromRight (LC.pack "") eitherBodyOrError
+                                     let extractedHTML = extractHtml url html
+                                     let pageData = extractPageData  extractedHTML
+                                     let urls' = (combineURLs urls . relativeToAbsoluteURLS url . extractRelativeURLs . fst ) pageData
+                                     let title = snd pageData     
+                                     let discoveredURLsDB' = M.insert url (Page  url title) discoveredURLsDB       
+                                     discovery maxRecords discoveredURLsDB' urls'
+                                 else discovery maxRecords discoveredURLsDB urls
                  else discovery maxRecords discoveredURLsDB urls
 
-extractURLs :: PageInfo -> [Text]
-extractURLs = mconcat . map (`attributeValueByName` "href") . filter ((== "a") . elementName) . elementsInfo
-
+extractPageData :: PageInfo -> ([PageURL], PageTitle)
+extractPageData pageInfo = (urls, title)
+  where
+    urls = (mconcat . map (`attributeValueByName` "href") . filter ((== "a") . elementName) . elementsInfo) pageInfo
+    title = pageTitle pageInfo
+    
 combineURLs :: [Text] -> [Text] -> [Text]
 combineURLs xs ys = (nub . mconcat) [xs, ys]
 
