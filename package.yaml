@@ -1,0 +1,68 @@
+name:                spider-bot
+version:             0.1.0.0
+github:              "sergfa/spider-bot"
+license:             BSD3
+author:              "Sergey Fayman"
+maintainer:          "sergfae@gmail.com"
+copyright:           "2018 Sergey Fayman"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/sergfa/spider-bot#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- text
+- aeson
+- bytestring
+- tagsoup
+- http-conduit
+- http-types
+- network-uri
+- containers
+- time
+- aeson-pretty
+   
+
+default-extensions:
+  - OverloadedStrings
+  - DeriveGeneric
+
+    
+
+
+
+library:
+  source-dirs: src
+
+executables:
+  discovery:
+    main:                DiscoveryMain.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - spider-bot
+
+
+tests:
+  spider-bot-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - spider-bot
