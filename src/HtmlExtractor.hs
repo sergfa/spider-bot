@@ -5,6 +5,7 @@ module HtmlExtractor
     , elementsInfo
     , elementName
     , attributeValueByName
+    , pageTitle
     ) where
 
 import qualified Data.ByteString.Lazy as L
@@ -14,12 +15,12 @@ import Data.Maybe (Maybe, catMaybes, mapMaybe)
 import qualified Data.Text as T
 import Data.Text (Text)
 import qualified Data.Text.Encoding as E
-import Text.HTML.TagSoup (Tag(..), fromAttrib, fromTagText, isTagOpen, isTagOpenName, isTagText, parseTags)
+import Text.HTML.TagSoup (Tag(..), (~==), fromAttrib, fromTagText, isTagOpen, isTagOpenName, isTagText, parseTags, sections)
 
 import CommonTypes (PageURL)
 
 monitoredTags :: [Text]
-monitoredTags = ["a"]
+monitoredTags = ["a", "title"]
 
 monitoredAttrs :: [Text]
 monitoredAttrs = ["src", "href", "type"]
@@ -41,6 +42,7 @@ data ElementInfo = ElementInfo
 data PageInfo = PageInfo
     { pageURL :: PageURL
     , elementsInfo :: [ElementInfo]
+    , pageTitle :: Text
     } deriving (Show)
 
 isMonitoredTag :: Tag Text -> Bool
@@ -64,17 +66,22 @@ parseAttributes tag = map (\attr -> (attr, attr `fromAttrib` tag)) monitoredAttr
 createAttribute :: (Text, Text) -> ElementAttribute
 createAttribute (name, value) = ElementAttribute name value
 
-extractText :: Tag Text -> Maybe Text
+extractText :: Tag Text -> Text
 extractText tag =
     if isTagText tag
-        then Just (fromTagText tag)
-        else Nothing
+        then fromTagText tag
+        else ""
 
 extractHtml :: PageURL -> LC.ByteString -> PageInfo
-extractHtml url html = PageInfo url elems
+extractHtml url html = PageInfo url elems title
   where
     tags = parseTags ((E.decodeUtf8 . L.toStrict) html)
     elems = (mapMaybe extractTag . filter isMonitoredTag) tags
+    titleTag::String
+    titleTag = "<title>"
+    titles =  map f $ sections (~== titleTag) tags
+    title = T.unlines titles
+    f = fromTagText . head . filter isTagText
 
 attributeValueByName :: ElementInfo -> Text -> [Text]
 attributeValueByName elem attrName = values
