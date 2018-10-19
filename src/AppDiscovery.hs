@@ -15,7 +15,7 @@ import Network.URI (isURI)
 import CommonTypes (Application, Application(..), PageTitle, PageURL, PageTitle, Page (..))
 
 import HtmlExtractor (PageInfo, attributeValueByName, elementName, pageElementsInfo, extractHtml, pageTitle)
-import URLFetcher (extractRelativeURLs, fetchRequest, relativeToAbsoluteURLS)
+import URLFetcher (extractDomainURLs, fetchRequest, relativeToAbsoluteURLS)
 
 mergeDiscoveredURLs :: M.Map Text Page -> [Text] -> M.Map Text Page
 mergeDiscoveredURLs discoveredURLs urls = M.unionWith (\left _-> left) discoveredURLs urlsToMap
@@ -39,7 +39,7 @@ discovery maxRecords discoveredURLsDB (url:urls) =
                                      let html = fromRight (LC.pack "") eitherBodyOrError
                                      let extractedHTML = extractHtml url html
                                      let pageData = extractPageData  extractedHTML
-                                     let urls' = (combineURLs urls . relativeToAbsoluteURLS url . extractRelativeURLs . fst ) pageData
+                                     let urls' = (combineURLs urls . relativeToAbsoluteURLS url . extractDomainURLs url . fst ) pageData
                                      let title = snd pageData     
                                      let discoveredURLsDB' = M.insert url (Page  url title) discoveredURLsDB       
                                      discovery maxRecords discoveredURLsDB' urls'
