@@ -13,6 +13,7 @@ import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Char8 as LC
 import Data.List (group, sort)
 import Data.Maybe (Maybe, catMaybes, mapMaybe)
+import Data.Either (fromRight)
 import qualified Data.Text as T
 import Data.Text (Text)
 import qualified Data.Text.Encoding as E
@@ -76,7 +77,7 @@ extractText tag =
 extractHtml :: PageURL -> LC.ByteString -> PageInfo
 extractHtml url html = PageInfo url elems title
   where
-    tags = parseTags ((E.decodeUtf8 . L.toStrict) html)
+    tags = parseTags ((fromRight "" . E.decodeUtf8' . L.toStrict) html)
     elems = (mapMaybe extractTag . filter isMonitoredTag) tags
     titleTag :: String
     titleTag = "<title>"
