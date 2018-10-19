@@ -20,7 +20,7 @@ import Text.HTML.TagSoup (Tag(..), (~==), fromAttrib, fromTagText, isTagOpen, is
 import CommonTypes (PageURL)
 
 monitoredTags :: [Text]
-monitoredTags = ["a", "title"]
+monitoredTags = ["a"]
 
 monitoredAttrs :: [Text]
 monitoredAttrs = ["src", "href", "type"]
