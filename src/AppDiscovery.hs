@@ -14,7 +14,7 @@ import Network.URI (isURI)
 
 import CommonTypes (Application, Application(..), PageTitle, PageURL, PageTitle, Page (..))
 
-import HtmlExtractor (PageInfo, attributeValueByName, elementName, elementsInfo, extractHtml, pageTitle)
+import HtmlExtractor (PageInfo, attributeValueByName, elementName, pageElementsInfo, extractHtml, pageTitle)
 import URLFetcher (extractRelativeURLs, fetchRequest, relativeToAbsoluteURLS)
 
 mergeDiscoveredURLs :: M.Map Text Page -> [Text] -> M.Map Text Page
@@ -49,7 +49,7 @@ discovery maxRecords discoveredURLsDB (url:urls) =
 extractPageData :: PageInfo -> ([PageURL], PageTitle)
 extractPageData pageInfo = (urls, title)
   where
-    urls = (mconcat . map (`attributeValueByName` "href") . filter ((== "a") . elementName) . elementsInfo) pageInfo
+    urls = (mconcat . map (`attributeValueByName` "href") . filter ((== "a") . elementName) . pageElementsInfo) pageInfo
     title = pageTitle pageInfo
     
 combineURLs :: [Text] -> [Text] -> [Text]

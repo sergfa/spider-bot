@@ -2,10 +2,11 @@ module HtmlExtractor
     ( extractHtml
     , PageInfo
     , ElementInfo
-    , elementsInfo
     , elementName
     , attributeValueByName
     , pageTitle
+    , pageURL
+    , pageElementsInfo
     ) where
 
 import qualified Data.ByteString.Lazy as L
@@ -41,7 +42,7 @@ data ElementInfo = ElementInfo
 
 data PageInfo = PageInfo
     { pageURL :: PageURL
-    , elementsInfo :: [ElementInfo]
+    , pageElementsInfo :: [ElementInfo]
     , pageTitle :: Text
     } deriving (Show)
 
@@ -77,9 +78,9 @@ extractHtml url html = PageInfo url elems title
   where
     tags = parseTags ((E.decodeUtf8 . L.toStrict) html)
     elems = (mapMaybe extractTag . filter isMonitoredTag) tags
-    titleTag::String
+    titleTag :: String
     titleTag = "<title>"
-    titles =  map f $ sections (~== titleTag) tags
+    titles = map f $ sections (~== titleTag) tags
     title = T.unlines titles
     f = fromTagText . head . filter isTagText
 
