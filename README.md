@@ -1,5 +1,5 @@
 # spider-bot
-A library and tool to disovery web site pages.
+A library and tool to disover web site pages.
 
 #  Installing Haskell
 
