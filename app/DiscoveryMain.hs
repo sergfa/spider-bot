@@ -10,15 +10,17 @@ import System.Environment
 
 import AppDiscovery (discoveryApplication)
 import CommonTypes (Application(..), PageURL)
+import HTMLBuilder (renderApp)
 
-startDiscovery :: Int -> PageURL -> FilePath -> IO ()
-startDiscovery limit page fname = do
-    app <- discoveryApplication limit page
-    LC.writeFile fname (encodePretty app)
+startDiscovery :: Int -> PageURL -> Text -> IO ()
+startDiscovery limit page appName = do
+    app <- discoveryApplication limit page appName
+    LC.writeFile (T.unpack(appName `T.append` ".json")) (encodePretty app)
+    LC.writeFile (T.unpack(appName `T.append` ".html")) (renderApp app)
 
 main :: IO ()
 main = do
     args <- getArgs
     case args of
-        [n, pageURL, fname] -> startDiscovery (read n) (T.pack pageURL) fname
-        _ -> TIO.putStrLn "Usage: discovery [max number of pages] [landing page URL] [ json output file name]"
+        [n, pageURL, appName] -> startDiscovery (read n) (T.pack pageURL) (T.pack appName)
+        _ -> TIO.putStrLn "Usage: discovery [max number of pages] [landing page URL] [application name]"
