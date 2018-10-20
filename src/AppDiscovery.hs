@@ -55,8 +55,8 @@ extractPageData pageInfo = (urls, title)
 combineURLs :: [Text] -> [Text] -> [Text]
 combineURLs xs ys = (nub . mconcat) [xs, ys]
 
-discoveryApplication :: Int -> AbsoluteURL -> IO Application
-discoveryApplication limit url = do
+discoveryApplication :: Int -> AbsoluteURL -> Text -> IO Application
+discoveryApplication limit url appName= do
     pages <- discovery limit M.empty [url]
     timestamp <- round `fmap` getPOSIXTime
-    return $ Application url timestamp (sort pages)
+    return $ Application url timestamp (sort pages) appName
