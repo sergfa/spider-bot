@@ -1,7 +1,7 @@
 module URLFetcher
     ( fetchRequest
     , Body
-    , extractDomainURLs
+    , filterDomainURLs
     , relativeToAbsoluteURLS
     , parseHostName
     , parseURIAuth
@@ -18,7 +18,7 @@ import Network.HTTP.Simple (Request, getResponseBody, getResponseStatus, httpLBS
 import Network.HTTP.Types (status200, statusMessage)
 import Network.URI (URI, URIAuth, isRelativeReference, isURI, parseAbsoluteURI, parseRelativeReference, parseURI, uriAuthority, uriPath, uriRegName, uriScheme)
 
-import CommonTypes (Body, PageURL)
+import CommonTypes (Body, PageURL, AbsoluteURL, RelativeURL)
 
 fetchRequest :: PageURL -> IO (Either BC.ByteString Body)
 fetchRequest url = do
@@ -29,16 +29,16 @@ fetchRequest url = do
         then return $ Right (getResponseBody response)
         else return $ Left $ statusMessage status
 
-extractDomainURLs :: PageURL -> [PageURL] -> [PageURL]
-extractDomainURLs domainURL = filter (\url -> compareURIAuth domainURL url || isRelativeReference (T.unpack url))
+filterDomainURLs :: PageURL -> [PageURL] -> [PageURL]
+filterDomainURLs domainURL = filter (\url -> compareURIAuth domainURL url || isRelativeReference (T.unpack url))
 
-parseURIAuth :: PageURL -> Maybe URIAuth
+parseURIAuth :: AbsoluteURL -> Maybe URIAuth
 parseURIAuth url = (parseURI . T.unpack) url >>= uriAuthority
 
 parseHostName :: URIAuth -> Text
 parseHostName = T.pack . uriRegName
 
-delimeter :: PageURL -> Text
+delimeter :: RelativeURL -> Text
 delimeter relativeURL
     | T.take 1 relativeURL == "/" = ""
     | otherwise = "/"
@@ -49,7 +49,7 @@ buildAbsoluteURL host protocol url =
         then url
         else mconcat [protocol, "//", host, delimeter url, url]
 
-relativeToAbsoluteURLS :: PageURL -> [PageURL] -> [PageURL]
+relativeToAbsoluteURLS :: AbsoluteURL -> [RelativeURL] -> [AbsoluteURL]
 relativeToAbsoluteURLS absoulteURL relativeURLs =
     if isNothing hostMaybe
         then []

@@ -19,7 +19,7 @@ import Data.Text (Text)
 import qualified Data.Text.Encoding as E
 import Text.HTML.TagSoup (Tag(..), (~==), fromAttrib, fromTagText, isTagOpen, isTagOpenName, isTagText, parseTags, sections)
 
-import CommonTypes (PageURL)
+import CommonTypes (PageURL, AbsoluteURL)
 
 monitoredTags :: [Text]
 monitoredTags = ["a"]
@@ -29,7 +29,6 @@ monitoredAttrs = ["src", "href", "type"]
 
 type ElementName = Text
 
-type ElementCount = Int
 
 data ElementAttribute = ElementAttribute
     { attributeName :: Text
@@ -74,7 +73,7 @@ extractText tag =
         then fromTagText tag
         else ""
 
-extractHtml :: PageURL -> LC.ByteString -> PageInfo
+extractHtml :: AbsoluteURL -> LC.ByteString -> PageInfo
 extractHtml url html = PageInfo url elems title
   where
     tags = parseTags ((fromRight "" . E.decodeUtf8' . L.toStrict) html)

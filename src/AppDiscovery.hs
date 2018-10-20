@@ -12,17 +12,17 @@ import Data.Text (Text)
 import Data.Time.Clock.POSIX
 import Network.URI (isURI)
 
-import CommonTypes (Application, Application(..), PageTitle, PageURL, PageTitle, Page (..))
+import CommonTypes (Application, Application(..), PageTitle, PageURL, PageTitle, Page (..), AbsoluteURL)
 
 import HtmlExtractor (PageInfo, attributeValueByName, elementName, pageElementsInfo, extractHtml, pageTitle)
-import URLFetcher (extractDomainURLs, fetchRequest, relativeToAbsoluteURLS)
+import URLFetcher (filterDomainURLs, fetchRequest, relativeToAbsoluteURLS)
 
-mergeDiscoveredURLs :: M.Map Text Page -> [Text] -> M.Map Text Page
+mergeDiscoveredURLs :: M.Map AbsoluteURL Page -> [AbsoluteURL] -> M.Map AbsoluteURL Page
 mergeDiscoveredURLs discoveredURLs urls = M.unionWith (\left _-> left) discoveredURLs urlsToMap
   where
     urlsToMap = M.fromList (zip urls (repeat EmptyPage))
 
-discovery :: Int -> M.Map PageURL Page -> [PageURL]  -> IO [Page]
+discovery :: Int -> M.Map AbsoluteURL Page -> [AbsoluteURL]  -> IO [Page]
 discovery _ discoveredURLsDB [] = return $ M.elems discoveredURLsDB
 discovery maxRecords discoveredURLsDB (url:urls) =
     if M.size discoveredURLsDB > maxRecords
@@ -39,7 +39,7 @@ discovery maxRecords discoveredURLsDB (url:urls) =
                                      let html = fromRight (LC.pack "") eitherBodyOrError
                                      let extractedHTML = extractHtml url html
                                      let pageData = extractPageData  extractedHTML
-                                     let urls' = (combineURLs urls . relativeToAbsoluteURLS url . extractDomainURLs url . fst ) pageData
+                                     let urls' = (combineURLs urls . relativeToAbsoluteURLS url . filterDomainURLs url . fst ) pageData
                                      let title = snd pageData     
                                      let discoveredURLsDB' = M.insert url (Page  url title) discoveredURLsDB       
                                      discovery maxRecords discoveredURLsDB' urls'
@@ -55,8 +55,8 @@ extractPageData pageInfo = (urls, title)
 combineURLs :: [Text] -> [Text] -> [Text]
 combineURLs xs ys = (nub . mconcat) [xs, ys]
 
-discoveryApplication :: Int -> PageURL -> IO Application
-discoveryApplication limit pageURL = do
-    pages <- discovery limit M.empty [pageURL]
+discoveryApplication :: Int -> AbsoluteURL -> IO Application
+discoveryApplication limit url = do
+    pages <- discovery limit M.empty [url]
     timestamp <- round `fmap` getPOSIXTime
-    return $ Application pageURL timestamp pages
+    return $ Application url timestamp pages
