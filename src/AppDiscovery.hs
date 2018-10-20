@@ -4,7 +4,7 @@ module AppDiscovery
 
 import qualified Data.ByteString.Lazy.Char8 as LC
 import Data.Either
-import Data.List (nub)
+import Data.List (nub, sort)
 import qualified Data.Map as M
 import Data.Maybe
 import qualified Data.Text as T
@@ -59,4 +59,4 @@ discoveryApplication :: Int -> AbsoluteURL -> IO Application
 discoveryApplication limit url = do
     pages <- discovery limit M.empty [url]
     timestamp <- round `fmap` getPOSIXTime
-    return $ Application url timestamp pages
+    return $ Application url timestamp (sort pages)
