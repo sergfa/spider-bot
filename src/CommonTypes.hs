@@ -1,9 +1,11 @@
 module CommonTypes
     ( PageURL
+    , AbsoluteURL
+    , RelativeURL
     , Body
     , PageTitle
     , Application(..)
-    , Page (..)
+    , Page(..)
     ) where
 
 import Data.Aeson (ToJSON, (.=), object, toJSON)
@@ -13,17 +15,22 @@ import qualified Data.Text as T
 
 type PageURL = Text
 
+type AbsoluteURL = Text
+
+type RelativeURL = Text
+
 type PageTitle = Text
 
 type Body = ByteString
 
-emptyText:: Text
+emptyText :: Text
 emptyText = ""
 
 data Page
     = Page PageURL
            PageTitle
-    | EmptyPage deriving Show
+    | EmptyPage
+    deriving (Show)
 
 instance ToJSON Page where
     toJSON (Page url title) = object ["url" .= url, "title" .= title]
