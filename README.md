@@ -1,5 +1,5 @@
 # spider-bot
-A library and tool to disover web site pages.
+A library and command line utility to disover web site pages.
 
 #  Installing Haskell
 
@@ -17,7 +17,7 @@ stack build
 
 # Running
 
-stack exec discovery 10 https://www.iana.org/domains/reserved iana.json
+stack exec discovery 10 https://www.iana.org/domains/reserved iana
 
 ```js
 {
@@ -68,6 +68,7 @@ stack exec discovery 10 https://www.iana.org/domains/reserved iana.json
         }
     ],
     "landingPage": "https://www.iana.org/domains/reserved",
-    "timestamp": 1539960783
+    "timestamp": 1539960783,
+    "name": "iana"
 }
 ```
